@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spidur"
+version = "0.1.0"
+description = "A lightweight, generic parallel runner for custom scrapers"
+authors = [{ name="Stonehedge Labs", email="rashad@stonehedgelabs.com" }]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.9"
+
+[project.scripts]
+spidur = "spidur.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/stonehedgelabs/spidur"
