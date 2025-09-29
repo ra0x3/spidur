@@ -1,6 +1,7 @@
 from typing import Type
 from .core import Target, Scraper
 
+
 class ScraperFactory:
     """A simple registry pattern for scrapers."""
 

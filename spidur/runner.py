@@ -7,6 +7,7 @@ from .factory import ScraperFactory
 
 log = logging.getLogger("scrape-runner")
 
+
 def _run_batch(batch: List[Target], out: Any, seen: Set[str], overwrite: bool):
     async def _inner():
         for t in batch:
@@ -16,6 +17,7 @@ def _run_batch(batch: List[Target], out: Any, seen: Set[str], overwrite: bool):
             out[t.name] = results or []
 
     asyncio.run(_inner())
+
 
 class Runner:
     """Parallel runner across multiple scrapers."""
@@ -30,12 +32,7 @@ class Runner:
 
         with multiprocessing.Manager() as manager:
             out = manager.dict()
-            jobs = [
-                multiprocessing.Process(
-                    target=_run_batch, args=(b, out, seen, overwrite)
-                )
-                for b in batches
-            ]
+            jobs = [multiprocessing.Process(target=_run_batch, args=(b, out, seen, overwrite)) for b in batches]
 
             for j in jobs:
                 j.start()

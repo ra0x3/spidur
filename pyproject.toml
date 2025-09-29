@@ -1,18 +1,20 @@
-[build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "spidur"
 version = "0.1.0"
-description = "A lightweight, generic parallel runner for custom scrapers"
-authors = [{ name="Stonehedge Labs", email="rashad@stonehedgelabs.com" }]
+description = "🕷️ A lightweight, generic parallel runner for custom scrapers"
+authors = ["Stonehedge Labs <you@stonehedgelabs.org>"]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.9"
+homepage = "https://github.com/stonehedgelabs/spidur"
+repository = "https://github.com/stonehedgelabs/spidur"
+keywords = ["scraping", "parallel", "async", "framework", "runner"]
 
-[project.scripts]
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.scripts]
 spidur = "spidur.cli:main"
 
-[project.urls]
-Homepage = "https://github.com/stonehedgelabs/spidur"
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
