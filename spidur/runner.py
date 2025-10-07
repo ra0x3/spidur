@@ -5,38 +5,56 @@ from typing import List, Dict, Any, Set
 from .core import Target
 from .factory import ScraperFactory
 
-log = logging.getLogger("scrape-runner")
+log = logging.getLogger("spidur.runner")
 
 
-def _run_batch(batch: List[Target], out: Any, seen: Set[str], overwrite: bool):
+def _run_batch(batch: List[Target], out: Any, seen: Set[str]):
+    """
+    Internal helper to run a batch of scrapers concurrently in an async loop.
+    Executed in a separate process by multiprocessing.
+    """
+
     async def _inner():
-        for t in batch:
-            log.info(f"Running scraper: {t.name}")
-            scraper = ScraperFactory.create(t)
-            results = await scraper.fetch(seen, overwrite)
-            out[t.name] = results or []
+        for target in batch:
+            log.info(f"[spidur] Running scraper: {target.name}")
+            scraper = ScraperFactory.create(target)
+            try:
+                results = await scraper.fetch_round(seen)
+                out[target.name] = results or []
+            except Exception as e:
+                log.exception(f"[spidur] Error in scraper '{target.name}': {e}")
+                out[target.name] = []
 
     asyncio.run(_inner())
 
 
 class Runner:
-    """Parallel runner across multiple scrapers."""
+    """Parallel runner to execute multiple scrapers concurrently across CPU cores."""
 
     @classmethod
-    def run(cls, targets: List[Target], seen: Set[str], overwrite: bool) -> Dict[str, List[Dict]]:
+    def run(
+        cls, targets: List[Target], seen: Set[str] | None = None
+    ) -> Dict[str, List[Dict[str, Any]]]:
         if not targets:
             return {}
 
-        batch_size = max(1, len(targets) // multiprocessing.cpu_count())
-        batches = [targets[i : i + batch_size] for i in range(0, len(targets), batch_size)]
+        seen = seen or set()
+        num_cores = multiprocessing.cpu_count()
+        batch_size = max(1, len(targets) // num_cores)
+        batches = [
+            targets[i : i + batch_size] for i in range(0, len(targets), batch_size)
+        ]
 
         with multiprocessing.Manager() as manager:
             out = manager.dict()
-            jobs = [multiprocessing.Process(target=_run_batch, args=(b, out, seen, overwrite)) for b in batches]
+            jobs = [
+                multiprocessing.Process(target=_run_batch, args=(batch, out, seen))
+                for batch in batches
+            ]
 
-            for j in jobs:
-                j.start()
-            for j in jobs:
-                j.join()
+            for job in jobs:
+                job.start()
+            for job in jobs:
+                job.join()
 
             return dict(out)
